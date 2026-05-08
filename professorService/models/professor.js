@@ -21,7 +21,7 @@ const professorSchema = new mongoose.Schema({
     type: String,
     required: true, // Store the hashed password
   },
-});
+},{timestamps: true});
 
 // Pre-save hook to hash the password before saving
 professorSchema.pre("save", async function (next) {

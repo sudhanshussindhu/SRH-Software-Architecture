@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Boiler plate project for rest api concepts",
   "main": "index.js",
+  "engines": {
+    "node": ">=20 <23"
+  },
   "scripts": {
     "start:authService": "npm --prefix ./authService run dev-auth-service",
     "start:professorService": "npm --prefix ./professorService run dev-professor-service",

@@ -4,6 +4,15 @@ const Student = require("../models/student");
 
 const router = express.Router();
 
+router.get("/", async (_req, res) => {
+    try {
+        const students = await Student.find().sort({ createdAt: -1 });
+        return res.status(200).json(students);
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
 router.post("/", async (req, res) => {
     const { name, email, password } = req.body;
 

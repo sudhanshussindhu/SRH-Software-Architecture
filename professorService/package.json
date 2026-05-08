@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Professor MicroService for Student Management System",
   "main": "index.js",
+  "engines": {
+    "node": ">=20 <23"
+  },
   "scripts": {
     "start-professor-service": "node index.js",
     "dev-professor-service": "nodemon index.js"
