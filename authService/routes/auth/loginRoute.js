@@ -8,7 +8,7 @@ const {
   fetchProfessors,
 } = require("./util");
 const { ROLES } = require("../../../consts");
-const { access } = require("fs");
+
 
 const router = express.Router();
 
@@ -63,6 +63,29 @@ router.post("/professor", async (req, res) => {
         .status(400)
         .json({ message: "Email and password are required" });
     }
+
+    // Get the list of professors from the professor service
+    const professors = await fetchProfessors();
+
+    // Find the professor with the provided email
+    const professor = professors.find((p) => p.email === email);
+    if (!professor) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Compare the provided password with the stored hashed password
+    const isMatch = await bcrypt.compare(password, professor.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Generate JWT token
+    const token = generateJWTWithPrivateKey({
+      sub: professor._id,
+      role: ROLES.PROFESSOR,
+    });
+
+    res.status(201).json({ access_token: token });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
