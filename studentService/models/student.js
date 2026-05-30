@@ -27,6 +27,11 @@ const studentSchema = new mongoose.Schema(
 	}
 );
 
+//This is a Mongoose pre-save hook — it runs automatically before any .save() call on a Student document
+// It checks if the password field has been modified (or is new) and,
+// if so, hashes the password using bcryptjs before saving it to the database. 
+// This ensures that passwords are stored securely.
+
 studentSchema.pre("save", async function (next) {
 	if (!this.isModified("password")) return next();
 
@@ -38,6 +43,11 @@ studentSchema.pre("save", async function (next) {
 		next(error);
 	}
 });
+
+// This adds a comparePassword method directly to every Student document instance.
+// enteredPassword — the plain-text password the user typed during login
+// this.password — the bcrypt hash stored in the DB for that student
+// bcryptjs.compare() — hashes the entered password the same way and checks if it matches the stored hash. Returns true or false.
 
 studentSchema.methods.comparePassword = async function (enteredPassword) {
 	return bcryptjs.compare(enteredPassword, this.password);

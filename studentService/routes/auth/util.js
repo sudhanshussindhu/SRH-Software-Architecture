@@ -1,17 +1,17 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const axios = require("axios");
-const { ROLES, AUTH_SERVICE } = require("../../../consts");
+const { ROLES, AUTH_SERVICE, ENROLLMENT_SERVICE } = require("../../../consts");
 
 dotenv.config();
 
-const trustedDomain = [AUTH_SERVICE.split("api")[0]]; // Extract base URL from AUTH_SERVICE
+const trustedDomain = [AUTH_SERVICE.split("api")[0], ENROLLMENT_SERVICE.split("api")[0]];
 
 // Fetches the JSON Web Key Set (JWKS) from the authService's well-known endpoint.
 // The JWKS contains the public key(s) used to verify JWT signatures.
 async function fetchJWKS(jku) {
   const response = await axios.get(jku);
-  return response.data.keys;
+  return response.data.keys; 
 }
 
 // Finds the matching public key in the JWKS by Key ID (kid) and reconstructs
@@ -32,6 +32,7 @@ function getPublicKeyFromJWKS(kid, keys) {
 //   2. Fetch the JWKS from the authService using the jku URL.
 //   3. Find the matching public key by kid.
 //   4. Verify the token signature using RS256 algorithm.
+
 async function verifyJWTWithJWKS(token) {
   const decoded = jwt.decode(token, { complete: true });
   if (!decoded || !decoded.header) {
@@ -39,9 +40,6 @@ async function verifyJWTWithJWKS(token) {
   }
   const { kid, jku } = decoded.header;
 
-//   if (!trustedDomain.includes(jku.split(".well")[0])) {
-//     throw new Error("Domain not supported");
-//   }
 
   if (!trustedDomain.some((domain) => jku.startsWith(domain))) {
     throw new Error("Untrusted JWKS URL");
@@ -66,7 +64,7 @@ function verifyRole(requiredRoles) {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ message: "No token provided" });
     }
-    const token = authHeader.split(" ")[1];
+    const token = authHeader.split(" ")[1]; // Extract the token part after "Bearer " Authorization: Bearer eyJhbGc... //  split(" ")[1] takes this part
     try {
       const payload = await verifyJWTWithJWKS(token);
       if (!requiredRoles.includes(payload.role)) {
@@ -84,7 +82,7 @@ function verifyRole(requiredRoles) {
 // Compares the authenticated user's ID (from the token) with the :id route param.
 // Admins and professors are not restricted by this middleware.
 function restrictStudentToOwnData(req, res, next) {
-  if (req.user.role === ROLES.STUDENT && req.user.id !== req.params.id) {
+  if (req.user.role === ROLES.STUDENT && req.user.sub !== req.params.id) {
     return res.status(403).json({ message: "Forbidden: access to own data only" });
   }
   next();

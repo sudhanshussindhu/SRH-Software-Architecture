@@ -1,19 +1,25 @@
 const express = require("express");
 
 const Student = require("../models/student");
-const { verifyRole, restrictStudentToOwnData } = require("./auth/util");
+const { verifyRole, restrictStudentToOwnData, verifyJWTWithJWKS } = require("./auth/util");
 const { ROLES } = require("../../consts");
 
 const router = express.Router();
 
 // GET /api/students/internal
 // Internal-only route used by authService to fetch students with password hashes for login.
-// Protected by a shared secret header (x-internal-secret) — never expose this publicly.
+// Protected by JWT service identity — only tokens with role AUTH_SERVICE are accepted.
 router.get("/internal", async (req, res) => {
-    if (req.headers["x-internal-secret"] !== process.env.INTERNAL_SERVICE_SECRET) {
+    const authHeader = req.headers["authorization"];
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return res.status(403).json({ error: "Forbidden" });
     }
     try {
+        const token = authHeader.split(" ")[1];
+        const payload = await verifyJWTWithJWKS(token);
+        if (payload.role !== ROLES.AUTH_SERVICE) {
+            return res.status(403).json({ error: "Forbidden" });
+        }
         const students = await Student.find().sort({ createdAt: -1 });
         return res.status(200).json(students);
     } catch (error) {
@@ -22,7 +28,7 @@ router.get("/internal", async (req, res) => {
 });
 
 // Only admins and professors can list all students
-router.get("/", verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]), async (_req, res) => {
+router.get("/", verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.ENROLLMENT_SERVICE]), async (_req, res) => {
     try {
         const students = await Student.find().select("-password").sort({ createdAt: -1 });
         return res.status(200).json(students);
@@ -31,6 +37,8 @@ router.get("/", verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]), async (_req, res) =>
     }
 });
 
+// POST /api/students 
+// Registers a new student. Public — no token required.
 router.post("/", async (req, res) => {
     const { name, email, password } = req.body;
 

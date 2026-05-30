@@ -1,5 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const { authServiceLogger } = require("../logging");
 
 const publicKeyRoute = require("./routes/auth/publicKeyRoute");
 const loginRoute = require("./routes/auth/loginRoute");
@@ -21,5 +22,5 @@ app.use("/api/login", loginRoute);
 // Start server
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
-  console.log(`Auth Server running on port ${PORT}`);
+  authServiceLogger.info(`Auth Server running on port ${PORT}`);
 });

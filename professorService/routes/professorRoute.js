@@ -1,18 +1,24 @@
 const express = require("express");
 const Professor = require("../models/professor");
 const bcrypt = require("bcrypt");
-const { verifyRole, restrictProfessorToOwnData } = require("./auth/util");
+const { verifyRole, restrictProfessorToOwnData, verifyJWTWithJWKS } = require("./auth/util");
 const { ROLES } = require("../../consts");
 const router = express.Router();
 
 // GET /api/professors/internal
 // Internal-only route used by authService to fetch professors with password hashes for login.
-// Protected by a shared secret header (x-internal-secret) — never expose this publicly.
+// Protected by JWT service identity — only tokens with role AUTH_SERVICE are accepted.
 router.get("/internal", async (req, res) => {
-  if (req.headers["x-internal-secret"] !== process.env.INTERNAL_SERVICE_SECRET) {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(403).json({ error: "Forbidden" });
   }
   try {
+    const token = authHeader.split(" ")[1];
+    const payload = await verifyJWTWithJWKS(token);
+    if (payload.role !== ROLES.AUTH_SERVICE) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
     const professors = await Professor.find().sort({ createdAt: -1 });
     return res.status(200).json(professors);
   } catch (error) {

@@ -1,9 +1,11 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const axios = require("axios");
-const { ROLES } = require("../../../consts");
+const { ROLES, AUTH_SERVICE, ENROLLMENT_SERVICE } = require("../../../consts");
 
 dotenv.config();
+
+const trustedDomain = [AUTH_SERVICE.split("api")[0], ENROLLMENT_SERVICE.split("api")[0]];
 
 /**
  * Fetch the JWKS from a given URI.
@@ -46,6 +48,10 @@ async function verifyJWTWithJWKS(token) {
 
   if (alg !== "RS256") {
     throw new Error(`Unsupported algorithm: ${alg}`);
+  }
+
+  if (!trustedDomain.some((domain) => jku.startsWith(domain))) {
+    throw new Error("Untrusted JWKS URL");
   }
 
   const keys = await fetchJWKS(jku);
@@ -93,7 +99,7 @@ function verifyRole(requiredRoles) {
 function restrictProfessorToOwnData(req, res, next) {
   if (
     req.user.role === ROLES.PROFESSOR &&
-    req.user.id !== req.params.id
+    req.user.sub !== req.params.id
   ) {
     return res.status(403).json({
       message: "Access forbidden: You can only access your own data",
@@ -102,7 +108,29 @@ function restrictProfessorToOwnData(req, res, next) {
   next();
 }
 
+async function restrictCourseToCreator(req, res, next) {
+  if (req.user.role === ROLES.ADMIN) {
+    return next();
+  }
+  try {
+    const Course = require("../../models/course");
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+    if (course.createdBy !== req.user.sub) {
+      return res.status(403).json({
+        message: "Access forbidden: You can only modify courses you created",
+      });
+    }
+    next();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
 module.exports = {
   verifyRole,
   restrictProfessorToOwnData,
+  restrictCourseToCreator,
 };

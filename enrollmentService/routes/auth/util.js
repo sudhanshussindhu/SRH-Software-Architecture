@@ -4,10 +4,12 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
-const { ROLES, STUDENT_SERVICE, COURSE_SERVICE } = require("../../../consts");
+const { ROLES, STUDENT_SERVICE, COURSE_SERVICE, AUTH_SERVICE } = require("../../../consts");
 // const { getCorrelationId } = require("../../../correlationId");
 
 dotenv.config();
+
+const trustedDomain = [AUTH_SERVICE.split("api")[0]];
 
 const axiosInstance = axios.create();
 
@@ -22,7 +24,7 @@ const axiosInstance = axios.create();
 //   }
 // );
 const kid = "1";
-const jku = `http://localhost:${process.env.PORT}/.well-known/jwks.json`;
+const jku = `${process.env.ENROLLMENT_SERVICE_URL || `http://localhost:${process.env.PORT}`}/.well-known/jwks.json`;
 
 // Define additional headers
 const customHeaders = {
@@ -82,6 +84,10 @@ async function verifyJWTWithJWKS(token) {
     throw new Error(`Unsupported algorithm: ${alg}`);
   }
 
+  if (!trustedDomain.some((domain) => jku.startsWith(domain))) {
+    throw new Error("Untrusted JWKS URL");
+  }
+
   const keys = await fetchJWKS(jku);
   const publicKey = getPublicKeyFromJWKS(kid, keys);
 
@@ -118,10 +124,7 @@ function verifyRole(requiredRoles) {
       req.user = decoded; // Attach the decoded payload (user data) to the request object
 
       // Step 2: Check if the user has any of the required roles
-      const userRoles = req.user.roles || [];
-      const hasRequiredRole = userRoles.some((role) =>
-        requiredRoles.includes(role)
-      );
+      const hasRequiredRole = requiredRoles.includes(req.user.role);
       if (hasRequiredRole) {
         return next(); // User has at least one of the required roles, so proceed
       } else {
@@ -140,8 +143,8 @@ function verifyRole(requiredRoles) {
 
 async function fetchStudents() {
   let token = generateJWTWithPrivateKey({
-    id: ROLES.ENROLLMENT_SERVICE,
-    roles: [ROLES.ENROLLMENT_SERVICE],
+    sub: "enrollmentService",
+    role: ROLES.ENROLLMENT_SERVICE,
   });
   const response = await axiosInstance.get(`${STUDENT_SERVICE}`, {
     headers: {
@@ -153,8 +156,8 @@ async function fetchStudents() {
 
 async function fetchCourses() {
   let token = generateJWTWithPrivateKey({
-    id: ROLES.ENROLLMENT_SERVICE,
-    roles: [ROLES.ENROLLMENT_SERVICE],
+    sub: "enrollmentService",
+    role: ROLES.ENROLLMENT_SERVICE,
   });
   const response = await axiosInstance.get(`${COURSE_SERVICE}`, {
     headers: {
@@ -164,8 +167,45 @@ async function fetchCourses() {
   return response.data;
 }
 
+async function fetchCourseById(courseId) {
+  const token = generateJWTWithPrivateKey({
+    sub: "enrollmentService",
+    role: ROLES.ENROLLMENT_SERVICE,
+  });
+  const response = await axiosInstance.get(`${COURSE_SERVICE}/${courseId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+}
+
+async function restrictEnrollmentToProfessorCourse(req, res, next) {
+  if (req.user.role === ROLES.ADMIN) {
+    return next();
+  }
+  try {
+    const { course } = req.body;
+    if (!course) {
+      return res.status(400).json({ message: "Course ID is required" });
+    }
+    const courseObj = await fetchCourseById(course);
+    if (courseObj.createdBy !== req.user.sub) {
+      return res.status(403).json({
+        message: "Access forbidden: You can only enroll students in courses you created",
+      });
+    }
+    next();
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+    res.status(500).json({ error: error.message });
+  }
+}
+
 function restrictStudentToOwnData(req, res, next) {
-  if (req.user.roles.includes(ROLES.STUDENT) && req.user.id !== req.params.id) {
+  if (req.user.role === ROLES.STUDENT && req.user.sub !== req.params.id) {
     return res.status(403).json({
       message: "Access forbidden: You can only access your own data",
     });
@@ -177,6 +217,8 @@ module.exports = {
   kid,
   verifyRole,
   restrictStudentToOwnData,
+  restrictEnrollmentToProfessorCourse,
   fetchStudents,
   fetchCourses,
+  fetchCourseById,
 };

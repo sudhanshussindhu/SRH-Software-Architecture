@@ -72,7 +72,7 @@ function verifyRole(requiredRoles) {
 // Compares the authenticated user's ID (from the token) with the :id route param.
 // Admins are not restricted by this middleware.
 function restrictProfessorToOwnData(req, res, next) {
-  if (req.user.role === ROLES.PROFESSOR && req.user.id !== req.params.id) {
+  if (req.user.role === ROLES.PROFESSOR && req.user.sub !== req.params.id) {
     return res.status(403).json({ message: "Forbidden: access to own data only" });
   }
   next();

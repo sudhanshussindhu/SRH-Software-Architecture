@@ -1,10 +1,12 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const path = require("path");
 const connectDB = require("./config/db");
+const { courseServiceLogger } = require("../logging");
 
 const courseRoutes = require("./routes/courseRoute");
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 // Initialize express app
 const app = express();
@@ -20,5 +22,5 @@ app.use("/api/courses", courseRoutes);
 // Start server
 const PORT = process.env.PORT || 5004;
 app.listen(PORT, () => {
-  console.log(`Course Server running on port ${PORT}`);
+  courseServiceLogger.info(`Course Server running on port ${PORT}`);
 });

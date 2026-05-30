@@ -1,18 +1,17 @@
 const express = require("express");
 const Course = require("../models/course");
 const router = express.Router();
-const { verifyRole } = require("./auth/util");
+const { verifyRole, restrictCourseToCreator } = require("./auth/util");
+const { courseServiceLogger } = require("../../logging");
 const { ROLES } = require("../../consts");
 
 // Create a new course
-//TODO: also add more restrictions to course
-// Only the professor who created the course can edit it or delete it etc or has access to it
 router.post(
   "/",
   verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]),
   async (req, res) => {
     try {
-      req.body.createdBy = req.user.id;
+      req.body.createdBy = req.user.sub;
       const course = new Course(req.body);
       await course.save();
       res.status(201).json(course);
@@ -57,6 +56,7 @@ router.get(
 router.put(
   "/:id",
   verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]),
+  restrictCourseToCreator,
   async (req, res) => {
     try {
       // Remove the `createdBy` field from the request body
@@ -81,6 +81,7 @@ router.put(
 router.delete(
   "/:id",
   verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]),
+  restrictCourseToCreator,
   async (req, res) => {
     try {
       const courseId = req.params.id; // Extract the course ID from the route parameter
@@ -93,10 +94,11 @@ router.delete(
         return res.status(404).json({ message: "Course not found" });
       }
 
+      courseServiceLogger.info(`Course deleted: ${courseId}`);
       // Respond with success message
       res.status(200).json({ message: "Course deleted successfully", course });
     } catch (error) {
-      console.error(error);
+      courseServiceLogger.error(`Delete course error: ${error.message}`);
 
       // Handle invalid ObjectId format
       if (error.kind === "ObjectId") {

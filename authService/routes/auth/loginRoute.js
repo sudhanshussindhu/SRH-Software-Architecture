@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const dotenv = require("dotenv");
+const { authServiceLogger } = require("../../../logging");
 
 const {
   generateJWTWithPrivateKey,
@@ -46,9 +47,11 @@ router.post("/student", async (req, res) => {
       role: ROLES.STUDENT,
     });
 
+    authServiceLogger.info(`Student login successful: ${student._id}`);
     res.status(201).json({ access_token: token });
+
   } catch (error) {
-    console.log(error);
+    authServiceLogger.error(`Student login error: ${error.message}`);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -85,9 +88,11 @@ router.post("/professor", async (req, res) => {
       role: ROLES.PROFESSOR,
     });
 
+    authServiceLogger.info(`Professor login successful: ${professor._id}`);
     res.status(201).json({ access_token: token });
+
   } catch (error) {
-    console.log(error);
+    authServiceLogger.error(`Professor login error: ${error.message}`);
     res.status(500).json({ message: "Server error" });
   }
 });

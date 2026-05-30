@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const path = require("path");
 const connectDB = require("./config/db");
+const { studentServiceLogger } = require("../logging");
 
 const studentRoute = require("./routes/studentRoute");
 
@@ -22,10 +23,10 @@ async function startServer() {
 
     const PORT = process.env.PORT || 5003;
     app.listen(PORT, () => {
-      console.log(`Student Server running on port ${PORT}`);
-     });
+      studentServiceLogger.info(`Student Server running on port ${PORT}`);
+    });
   } catch (error) {
-    console.error(`Failed to start student service: ${error.message}`);
+    studentServiceLogger.error(`Failed to start student service: ${error.message}`);
     process.exit(1);
   }
 }

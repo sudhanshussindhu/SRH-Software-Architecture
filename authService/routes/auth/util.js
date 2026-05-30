@@ -47,14 +47,20 @@ function generateJWTWithPrivateKey(payload) {
 
 // Verifies a JWT using the locally loaded RSA public key.
 // Used internally within authService where the public key is available on disk.
+// Only used inside authService itself (other services fetch the key remotely via jku).
 function verifyJWTWithPublicKey(token) {
   return jwt.verify(token, publicKey, { algorithms: ["RS256"] });
 }
 
-// Internal headers sent with every service-to-service request.
-// The receiving service validates this secret to reject requests from outside.
+// Service identity token — signed with the authService private key, role AUTH_SERVICE.
+// Receiving services verify it via JWKS instead of checking a shared secret.
+const serviceToken = jwt.sign(
+  { sub: "authService", role: ROLES.AUTH_SERVICE },
+  privateKey,
+  { algorithm: "RS256", header: customHeaders }
+);
 const internalHeaders = {
-  "x-internal-secret": process.env.INTERNAL_SERVICE_SECRET,
+  Authorization: `Bearer ${serviceToken}`,
 };
 
 // Calls studentService internal endpoint to retrieve all students including password hashes.
