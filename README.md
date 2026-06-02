@@ -15,52 +15,52 @@ The application is split into six services that work together:
 
 The services communicate over HTTP and use JWTs signed by the auth service. Internal service-to-service calls rely on role-based tokens and shared JWKS verification. Every request also carries a correlation ID so logs can be traced across services.
 
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│                          CLIENT REQUEST                              │
-│                  Header: x-correlation-id: <uuid>                    │
-└──────────────────────────┬───────────────────────────────────────────┘
-                           │
-         ┌─────────────────────────────────────────────────────────────┐
-         │                       SERVICE FLOW                          │
-         └─────────────────────────────────────────────────────────────┘
-┌──────────────────────┐     ┌──────────────────────┐     ┌──────────────────────┐
-│     authService      │     │   studentService     │     │ professorService     │
-│       Port 5001      │     │      Port 5003       │     │      Port 5002       │
-└──────────┬───────────┘     └──────────────────────┘     └──────────────────────┘
-           │
-           ├────────────────────────────────────────────────────────────► studentService
-           │                                                              (fetchStudents / fetchStudentById)
-           │
-           └────────────────────────────────────────────────────────────► professorService
-                                                                          (fetchProfessors)
+Note: the diagram below is not showing all services being called at the same time. It represents one client request entering one service, and that service may then call other services as needed.
 
-┌──────────────────────┐     ┌──────────────────────┐     ┌──────────────────────┐
-│    courseService     │     │ enrollmentService    │     │     gradeService     │
-│      Port 5004       │     │      Port 5005       │     │      Port 5006       │
-└──────────────────────┘     └──────────┬───────────┘     └──────────┬───────────┘
-                                       │                             │
-                                       ├────────────────────────────► studentService
-                                       │                             (fetchStudents / fetchStudentById)
-                                       └────────────────────────────► courseService
-                                                                     (fetchCourses / fetchCourseById)
+```mermaid
+flowchart TB
+    client["Client request<br/>Header: x-correlation-id: &lt;uuid&gt;"]
 
-                                                                     ├────────────────────────────► studentService
-                                                                     │                             (fetchStudentById)
-                                                                     ├────────────────────────────► courseService
-                                                                     │                             (fetchCourseById)
-                                                                     └────────────────────────────► enrollmentService
-                                                                                                   (fetchEnrollmentByStudentAndCourse)
+    subgraph serviceFlow["Service Flow"]
+        direction LR
+        auth["authService<br/>Port 5001"]
+        student["studentService<br/>Port 5003"]
+        professor["professorService<br/>Port 5002"]
+        course["courseService<br/>Port 5004"]
+        enrollment["enrollmentService<br/>Port 5005"]
+        grade["gradeService<br/>Port 5006"]
 
-┌──────────────────────────────────────────────────────────────────────┐
-│                           LOGGING FLOW                               │
-└──────────────────────────────────────────────────────────────────────┘
-┌──────────────────────┐     ┌──────────────────────┐     ┌──────────────────────┐
-│     logging.js       │────►│  Winston transport   │────►│   Elasticsearch      │
-└──────────┬───────────┘     └──────────────────────┘     │     (sms-logs-*)     │
-           │                                               └──────────────────────┘
-           └──────────── logs from auth, student, professor, course, enrollment, grade ────────────►
+        auth -->|fetchStudents<br/>fetchStudentById| student
+        auth -->|fetchProfessors| professor
+        enrollment -->|fetchStudents<br/>fetchStudentById| student
+        enrollment -->|fetchCourses<br/>fetchCourseById| course
+        grade -->|fetchStudentById| student
+        grade -->|fetchCourseById| course
+        grade -->|fetchEnrollmentByStudentAndCourse| enrollment
+    end
 
+    subgraph loggingFlow["Logging Flow"]
+        direction LR
+        logging["logging.js"]
+        winston["Winston transport"]
+        elastic["Elasticsearch<br/>(sms-logs-*)"]
+
+        logging --> winston --> elastic
+    end
+
+    client --> auth
+    client --> student
+    client --> professor
+    client --> course
+    client --> enrollment
+    client --> grade
+
+    auth -. logs .-> logging
+    student -. logs .-> logging
+    professor -. logs .-> logging
+    course -. logs .-> logging
+    enrollment -. logs .-> logging
+    grade -. logs .-> logging
 ```
 
 ## Tech Stack
