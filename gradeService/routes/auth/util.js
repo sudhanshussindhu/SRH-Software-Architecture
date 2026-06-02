@@ -1,13 +1,18 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const axios = require("axios");
-const { getCorrelationId } = require("../../../correlationId");
-const { enrollementServiceLogger } = require("../../../logging");
 const fs = require("fs");
 const path = require("path");
 const jwkToPem = require("jwk-to-pem");
 
-const { ROLES, STUDENT_SERVICE, COURSE_SERVICE } = require("../../../consts");
+const { getCorrelationId } = require("../../../correlationId");
+const { gradeServiceLogger } = require("../../../logging");
+const {
+  ROLES,
+  STUDENT_SERVICE,
+  COURSE_SERVICE,
+  ENROLLMENT_SERVICE,
+} = require("../../../consts");
 
 dotenv.config();
 
@@ -17,15 +22,20 @@ axiosInstance.interceptors.request.use((config) => {
   try {
     const cid = getCorrelationId();
     if (cid) config.headers["x-correlation-id"] = cid;
-    enrollementServiceLogger.debug(`Outgoing request ${config.method} ${config.url} - cid:${cid}`);
+    gradeServiceLogger.debug(
+      `Outgoing request ${config.method} ${config.url} - cid:${cid}`
+    );
   } catch (e) {}
   return config;
 });
+
 axiosInstance.interceptors.response.use(
   (res) => res,
   (err) => {
     try {
-      enrollementServiceLogger.error(`Outgoing request failed: ${err && err.message} - cid:${getCorrelationId()}`);
+      gradeServiceLogger.error(
+        `Outgoing request failed: ${err && err.message} - cid:${getCorrelationId()}`
+      );
     } catch (e) {}
     return Promise.reject(err);
   }
@@ -103,7 +113,9 @@ function verifyRole(requiredRoles) {
       req.headers.authorization && req.headers.authorization.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ message: "Authorization token is missing" });
+      return res
+        .status(401)
+        .json({ message: "Authorization token is missing" });
     }
 
     try {
@@ -111,36 +123,29 @@ function verifyRole(requiredRoles) {
       req.user = decoded;
 
       const userRoles = req.user.roles || [];
-      const hasRequiredRole = userRoles.some((role) => requiredRoles.includes(role));
+      const hasRequiredRole = userRoles.some((role) =>
+        requiredRoles.includes(role)
+      );
       if (hasRequiredRole) {
         return next();
       } else {
-        return res.status(403).json({ message: "Access forbidden: Insufficient role" });
+        return res
+          .status(403)
+          .json({ message: "Access forbidden: Insufficient role" });
       }
     } catch (error) {
       console.error(error);
-      return res.status(403).json({ message: "Invalid or expired token", error: error.message });
+      return res
+        .status(403)
+        .json({ message: "Invalid or expired token", error: error.message });
     }
   };
 }
 
-async function fetchStudents() {
-  let token = generateJWTWithPrivateKey({
-    id: ROLES.ENROLLMENT_SERVICE,
-    roles: [ROLES.ENROLLMENT_SERVICE],
-  });
-  const response = await axiosInstance.get(`${STUDENT_SERVICE}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
-}
-
 async function fetchStudentById(studentId) {
   let token = generateJWTWithPrivateKey({
-    id: ROLES.ENROLLMENT_SERVICE,
-    roles: [ROLES.ENROLLMENT_SERVICE],
+    id: ROLES.GRADE_SERVICE,
+    roles: [ROLES.GRADE_SERVICE],
   });
   const response = await axiosInstance.get(`${STUDENT_SERVICE}/${studentId}`, {
     headers: {
@@ -150,23 +155,10 @@ async function fetchStudentById(studentId) {
   return response.data;
 }
 
-async function fetchCourses() {
-  let token = generateJWTWithPrivateKey({
-    id: ROLES.ENROLLMENT_SERVICE,
-    roles: [ROLES.ENROLLMENT_SERVICE],
-  });
-  const response = await axiosInstance.get(`${COURSE_SERVICE}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
-}
-
 async function fetchCourseById(courseId) {
   let token = generateJWTWithPrivateKey({
-    id: ROLES.ENROLLMENT_SERVICE,
-    roles: [ROLES.ENROLLMENT_SERVICE],
+    id: ROLES.GRADE_SERVICE,
+    roles: [ROLES.GRADE_SERVICE],
   });
   const response = await axiosInstance.get(`${COURSE_SERVICE}/${courseId}`, {
     headers: {
@@ -176,8 +168,24 @@ async function fetchCourseById(courseId) {
   return response.data;
 }
 
+async function fetchEnrollmentByStudentAndCourse(studentId, courseId) {
+  let token = generateJWTWithPrivateKey({
+    id: ROLES.GRADE_SERVICE,
+    roles: [ROLES.GRADE_SERVICE],
+  });
+  const response = await axiosInstance.get(
+    `${ENROLLMENT_SERVICE}/lookup?student=${studentId}&course=${courseId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+}
+
 function restrictStudentToOwnData(req, res, next) {
-  if (req.user.roles.includes(ROLES.STUDENT) && req.user.id !== req.params.id) {
+  if (req.user.roles.includes(ROLES.STUDENT) && req.user.id !== req.params.studentId) {
     return res.status(403).json({
       message: "Access forbidden: You can only access your own data",
     });
@@ -189,9 +197,8 @@ module.exports = {
   kid,
   verifyRole,
   restrictStudentToOwnData,
-  fetchStudents,
   fetchStudentById,
-  fetchCourses,
   fetchCourseById,
+  fetchEnrollmentByStudentAndCourse,
   generateJWTWithPrivateKey,
 };

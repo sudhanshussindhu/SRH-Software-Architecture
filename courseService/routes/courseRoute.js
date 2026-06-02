@@ -1,8 +1,7 @@
 const express = require("express");
 const Course = require("../models/course");
 const router = express.Router();
-const { verifyRole, restrictCourseToCreator } = require("./auth/util");
-const { courseServiceLogger } = require("../../logging");
+const { verifyRole } = require("./auth/util");
 const { ROLES } = require("../../consts");
 
 // Create a new course
@@ -11,7 +10,7 @@ router.post(
   verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]),
   async (req, res) => {
     try {
-      req.body.createdBy = req.user.sub;
+      req.body.createdBy = req.user.id;
       const course = new Course(req.body);
       await course.save();
       res.status(201).json(course);
@@ -38,7 +37,7 @@ router.get(
 // Get a single course by ID
 router.get(
   "/:id",
-  verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.ENROLLMENT_SERVICE]),
+  verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.ENROLLMENT_SERVICE, ROLES.GRADE_SERVICE]),
   async (req, res) => {
     try {
       const course = await Course.findById(req.params.id);
@@ -56,21 +55,37 @@ router.get(
 router.put(
   "/:id",
   verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]),
-  restrictCourseToCreator,
   async (req, res) => {
     try {
-      // Remove the `createdBy` field from the request body
-      if ("createdBy" in req.body) {
-        delete req.body.createdBy;
-      }
-      const course = await Course.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true,
-      });
+      const course = await Course.findById(req.params.id);
       if (!course) {
         return res.status(404).json({ message: "Course not found" });
       }
-      res.status(200).json(course);
+
+      // If professor, ensure they created the course
+      if (
+        req.user.roles.includes(ROLES.PROFESSOR) &&
+        course.createdBy !== req.user.id
+      ) {
+        return res
+          .status(403)
+          .json({ message: "Access forbidden: You did not create this course" });
+      }
+
+      // Remove the `createdBy` field from the request body to prevent transfer
+      if ("createdBy" in req.body) {
+        delete req.body.createdBy;
+      }
+
+      const updatedCourse = await Course.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+      res.status(200).json(updatedCourse);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
@@ -81,31 +96,32 @@ router.put(
 router.delete(
   "/:id",
   verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]),
-  restrictCourseToCreator,
   async (req, res) => {
     try {
-      const courseId = req.params.id; // Extract the course ID from the route parameter
-      console.log("Deleting course with ID:", courseId);
-
-      // Attempt to find and delete the course
-      const course = await Course.findByIdAndDelete(courseId);
+      const courseId = req.params.id;
+      const course = await Course.findById(courseId);
 
       if (!course) {
         return res.status(404).json({ message: "Course not found" });
       }
 
-      courseServiceLogger.info(`Course deleted: ${courseId}`);
-      // Respond with success message
+      // If professor, ensure they created the course
+      if (
+        req.user.roles.includes(ROLES.PROFESSOR) &&
+        course.createdBy !== req.user.id
+      ) {
+        return res
+          .status(403)
+          .json({ message: "Access forbidden: You did not create this course" });
+      }
+
+      await Course.findByIdAndDelete(courseId);
       res.status(200).json({ message: "Course deleted successfully", course });
     } catch (error) {
-      courseServiceLogger.error(`Delete course error: ${error.message}`);
-
-      // Handle invalid ObjectId format
+      console.error(error);
       if (error.kind === "ObjectId") {
         return res.status(400).json({ message: "Invalid course ID format" });
       }
-
-      // Handle other server errors
       res
         .status(500)
         .json({ message: "Server Error: Unable to delete course" });

@@ -1,16 +1,15 @@
 const express = require("express");
 
 const Enrollment = require("../models/enrollment");
-const { enrollementServiceLogger } = require("../../logging");
-
 const router = express.Router();
 
 const {
   verifyRole,
   restrictStudentToOwnData,
-  restrictEnrollmentToProfessorCourse,
   fetchStudents,
+  fetchStudentById,
   fetchCourses,
+  fetchCourseById,
 } = require("./auth/util");
 const { ROLES } = require("../../consts");
 
@@ -18,32 +17,48 @@ const { ROLES } = require("../../consts");
 router.post(
   "/",
   verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]),
-  restrictEnrollmentToProfessorCourse,
   async (req, res) => {
     try {
       const { student, course } = req.body;
 
-      // Ensure both student and course IDs are provided
       if (!student || !course) {
         return res
           .status(400)
           .json({ message: "Student and Course are required" });
       }
 
-      const existing = await Enrollment.findOne({ student, course });
-      if (existing) {
+      // Verify if student exists
+      try {
+        await fetchStudentById(student);
+      } catch (err) {
         return res
-          .status(409)
+          .status(404)
+          .json({ message: `Student not found: ${err.message}` });
+      }
+
+      // Verify if course exists
+      try {
+        await fetchCourseById(course);
+      } catch (err) {
+        return res
+          .status(404)
+          .json({ message: `Course not found: ${err.message}` });
+      }
+
+      // Check if student is already enrolled in this course
+      const existingEnrollment = await Enrollment.findOne({ student, course });
+      if (existingEnrollment) {
+        return res
+          .status(400)
           .json({ message: "Student is already enrolled in this course" });
       }
 
-      const enrollment = new Enrollment({ student, course });
-      await enrollment.save();
-      enrollementServiceLogger.info(`Enrollment created: student=${student} course=${course}`);
-      res.status(201).json(enrollment);
+      const newEnrollment = new Enrollment({ student, course });
+      const savedEnrollment = await newEnrollment.save();
+      return res.status(201).json(savedEnrollment);
     } catch (error) {
-      enrollementServiceLogger.error(`Create enrollment error: ${error.message}`);
-      res.status(500).json({
+      console.error(error);
+      return res.status(500).json({
         message: "Server Error: Unable to create enrollment",
       });
     }
@@ -56,10 +71,36 @@ router.get(
   async (req, res) => {
     try {
       let enrollments = await Enrollment.find();
-      res.status(200).json(enrollments);
+      return res.status(200).json(enrollments);
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         message: "Server Error: Unable to fetch enrollments",
+      });
+    }
+  }
+);
+
+// Lookup specific enrollment by student and course (Admin and Grade Service only)
+// Put before /:id so it doesn't match /:id route
+router.get(
+  "/lookup",
+  verifyRole([ROLES.ADMIN, ROLES.GRADE_SERVICE]),
+  async (req, res) => {
+    try {
+      const { student, course } = req.query;
+      if (!student || !course) {
+        return res
+          .status(400)
+          .json({ message: "Student and Course parameters are required" });
+      }
+      const enrollment = await Enrollment.findOne({ student, course });
+      if (!enrollment) {
+        return res.status(404).json({ message: "Enrollment not found" });
+      }
+      return res.status(200).json(enrollment);
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server Error: Unable to lookup enrollment",
       });
     }
   }
@@ -68,7 +109,7 @@ router.get(
 // Get enrollment by student ID
 router.get(
   "/student/:id",
-  verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.STUDENT]),
+  verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.STUDENT, ROLES.GRADE_SERVICE]),
   restrictStudentToOwnData,
   async (req, res) => {
     try {
@@ -106,7 +147,7 @@ router.get(
 // Get enrollment by course ID
 router.get(
   "/course/:id",
-  verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]),
+  verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.GRADE_SERVICE]),
   async (req, res) => {
     try {
       const enrollments = await Enrollment.find({ course: req.params.id });
@@ -149,30 +190,14 @@ router.get(
         return res.status(404).json({ message: "Enrollment not found" });
       }
 
-      const [students, courses] = await Promise.all([
-        fetchStudents(),
-        fetchCourses(),
-      ]);
-
-      const enrollmentObj = enrollment.toObject();
-      const student = students.find(
-        (student) => student._id.toString() === enrollmentObj.student.toString()
-      );
-      const course = courses.find(
-        (course) => course._id.toString() === enrollmentObj.course.toString()
-      );
-
-      if (student) {
-        enrollmentObj.student = student;
-      }
-
-      if (course) {
-        enrollmentObj.course = course;
-      }
-
-      res.status(200).json(enrollmentObj);
+      return res.status(200).json(enrollment);
     } catch (error) {
-      res.status(500).json({
+      if (error.kind === "ObjectId") {
+        return res
+          .status(400)
+          .json({ message: "Invalid enrollment ID format" });
+      }
+      return res.status(500).json({
         message: "Server Error: Unable to fetch enrollment",
       });
     }

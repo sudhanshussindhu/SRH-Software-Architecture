@@ -1,34 +1,52 @@
-const express = require("express");
 const dotenv = require("dotenv");
 const path = require("path");
-const connectDB = require("./config/db");
-const { studentServiceLogger } = require("../logging");
-
-const studentRoute = require("./routes/studentRoute");
-
 dotenv.config({ path: path.join(__dirname, ".env") });
 
-// Initialize express app
+const express = require("express");
+const rateLimit = require("express-rate-limit");
+const connectDB = require("./config/db");
+const studentRoutes = require("./routes/studentRoute");
+
+// Connect DB
+connectDB();
+
+// Create Express app
 const app = express();
 
 // Middleware
 app.use(express.json());
 
-app.use("/api/students", studentRoute);
+const { correlationIdMiddleware, getCorrelationId } = require("../correlationId");
+const { studentServiceLogger } = require("../logging");
 
-async function startServer() {
-  try {
-    // Connect to database before accepting requests.
-    await connectDB();
+// Correlation ID middleware
+app.use(correlationIdMiddleware);
 
-    const PORT = process.env.PORT || 5003;
-    app.listen(PORT, () => {
-      studentServiceLogger.info(`Student Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    studentServiceLogger.error(`Failed to start student service: ${error.message}`);
-    process.exit(1);
-  }
-}
+// Rate limiting
+app.use(rateLimit({
+  windowMs: 60 * 1000, // 1 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later",
+  headers: true, // Include rate limit info in response headers
+}));
 
-startServer();
+// Request logging
+app.use((req, res, next) => {
+  studentServiceLogger.info(`${req.method} ${req.originalUrl} - cid:${getCorrelationId()}`);
+  next();
+});
+
+// Routes
+app.use("/api/students", studentRoutes);
+
+// Error handler
+app.use((err, req, res, next) => {
+  studentServiceLogger.error(`Unhandled error: ${err && err.message} - cid:${getCorrelationId()}`);
+  res.status(500).json({ message: "Internal Server Error" });
+});
+
+const PORT = process.env.PORT || 5003;
+
+app.listen(PORT, () => {
+  studentServiceLogger.info(`Student Service is running on port ${PORT}`);
+});

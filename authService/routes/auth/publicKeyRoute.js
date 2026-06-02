@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const { kid } = require("./util");
 
 // Path to your private and public keys
@@ -12,22 +13,25 @@ const publicKey = fs.readFileSync(
 
 // JWKS endpoint (to expose the public key in JWK format)
 router.get("/", (req, res) => {
-  const publicJWK = {
-    keys: [
-      {
-        kty: "RSA",
-        kid, // Key ID, used to identify the key
-        use: "sig", // Key use (signature)
-        alg: "RS256", // Algorithm
-        n: publicKey
-          .match(
-            /(?:-----BEGIN PUBLIC KEY-----)(.*)(?:-----END PUBLIC KEY-----)/s
-          )[1]
-          .replace(/\n/g, ""),
-        e: "AQAB", // Public exponent (always AQAB for RSA)
-      },
-    ],
-  };
-  res.json(publicJWK);
+  try {
+    const jwk = crypto.createPublicKey(publicKey).export({ format: "jwk" });
+    const publicJWK = {
+      keys: [
+        {
+          kty: jwk.kty,
+          kid, // Key ID, used to identify the key
+          use: "sig", // Key use (signature)
+          alg: "RS256", // Algorithm
+          n: jwk.n,
+          e: jwk.e,
+        },
+      ],
+    };
+    res.json(publicJWK);
+  } catch (error) {
+    console.error("Error generating JWK:", error);
+    res.status(500).json({ message: "Server error generating JWK" });
+  }
 });
+
 module.exports = router;

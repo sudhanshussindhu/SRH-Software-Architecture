@@ -17,7 +17,7 @@ router.get("/internal", async (req, res) => {
     try {
         const token = authHeader.split(" ")[1];
         const payload = await verifyJWTWithJWKS(token);
-        if (payload.role !== ROLES.AUTH_SERVICE) {
+        if (!payload.roles.includes(ROLES.AUTH_SERVICE)) {
             return res.status(403).json({ error: "Forbidden" });
         }
         const students = await Student.find().sort({ createdAt: -1 });
@@ -27,10 +27,10 @@ router.get("/internal", async (req, res) => {
     }
 });
 
-// Only admins and professors can list all students
-router.get("/", verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.ENROLLMENT_SERVICE]), async (_req, res) => {
+// Only admins, professors, enrollment service, and auth service can list all students
+router.get("/", verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.ENROLLMENT_SERVICE, ROLES.AUTH_SERVICE]), async (_req, res) => {
     try {
-        const students = await Student.find().select("-password").sort({ createdAt: -1 });
+        const students = await Student.find();
         return res.status(200).json(students);
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -81,7 +81,7 @@ router.post("/", async (req, res) => {
 // Admins and professors can fetch any student; students can only fetch their own record.
 router.get(
     "/:id",
-    verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.STUDENT]),
+    verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.STUDENT, ROLES.ENROLLMENT_SERVICE, ROLES.GRADE_SERVICE]),
     restrictStudentToOwnData,
     async (req, res) => {
         try {

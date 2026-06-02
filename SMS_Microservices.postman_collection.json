@@ -1,0 +1,881 @@
+{
+	"info": {
+		"_postman_id": "c3f91a2e-7d84-4b58-a1e0-9b2c5d3e8f46",
+		"name": "Student Management System API",
+		"description": "API collection for the SMS microservices — Auth, Student, Professor, Course, Enrollment, and Grade services.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "auth_url",
+			"value": "http://localhost:5001",
+			"type": "string"
+		},
+		{
+			"key": "student_url",
+			"value": "http://localhost:5003",
+			"type": "string"
+		},
+		{
+			"key": "professor_url",
+			"value": "http://localhost:5002",
+			"type": "string"
+		},
+		{
+			"key": "course_url",
+			"value": "http://localhost:5004",
+			"type": "string"
+		},
+		{
+			"key": "enrollment_url",
+			"value": "http://localhost:5005",
+			"type": "string"
+		},
+		{
+			"key": "grade_url",
+			"value": "http://localhost:5006",
+			"type": "string"
+		},
+		{
+			"key": "student_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "professor_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "student_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "professor_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "course_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "enrollment_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "grade_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth Service",
+			"item": [
+				{
+					"name": "Login as Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.access_token) {",
+									"    pm.collectionVariables.set('student_token', json.access_token);",
+									"    console.log('Student token saved');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"riya.kapoor@sms.edu\",\n    \"password\": \"stu123\"\n}"
+						},
+						"url": {
+							"raw": "{{auth_url}}/api/login/student",
+							"host": ["{{auth_url}}"],
+							"path": ["api", "login", "student"]
+						}
+					}
+				},
+				{
+					"name": "Login as Professor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.access_token) {",
+									"    pm.collectionVariables.set('professor_token', json.access_token);",
+									"    console.log('Professor token saved');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"anil.mehta@sms.edu\",\n    \"password\": \"prof123\"\n}"
+						},
+						"url": {
+							"raw": "{{auth_url}}/api/login/professor",
+							"host": ["{{auth_url}}"],
+							"path": ["api", "login", "professor"]
+						}
+					}
+				},
+				{
+					"name": "Login as Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.access_token) {",
+									"    pm.collectionVariables.set('admin_token', json.access_token);",
+									"    console.log('Admin token saved');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@gmail.com\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{auth_url}}/api/login/admin",
+							"host": ["{{auth_url}}"],
+							"path": ["api", "login", "admin"]
+						}
+					}
+				},
+				{
+					"name": "Auth Service JWKS",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{auth_url}}/.well-known/jwks.json",
+							"host": ["{{auth_url}}"],
+							"path": [".well-known", "jwks.json"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Student Service",
+			"item": [
+				{
+					"name": "Register New Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json._id) {",
+									"    pm.collectionVariables.set('student_id', json._id);",
+									"    console.log('Student ID saved: ' + json._id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Riya Kapoor\",\n    \"email\": \"riya.kapoor@sms.edu\",\n    \"password\": \"stu123\"\n}"
+						},
+						"url": {
+							"raw": "{{student_url}}/api/students",
+							"host": ["{{student_url}}"],
+							"path": ["api", "students"]
+						}
+					}
+				},
+				{
+					"name": "Get All Students",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{student_url}}/api/students",
+							"host": ["{{student_url}}"],
+							"path": ["api", "students"]
+						}
+					}
+				},
+				{
+					"name": "Get Student by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{student_url}}/api/students/{{student_id}}",
+							"host": ["{{student_url}}"],
+							"path": ["api", "students", "{{student_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Student",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Riya Kapoor\",\n    \"email\": \"riya.kapoor.updated@sms.edu\"\n}"
+						},
+						"url": {
+							"raw": "{{student_url}}/api/students/{{student_id}}",
+							"host": ["{{student_url}}"],
+							"path": ["api", "students", "{{student_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Student",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{student_url}}/api/students/{{student_id}}",
+							"host": ["{{student_url}}"],
+							"path": ["api", "students", "{{student_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Professor Service",
+			"item": [
+				{
+					"name": "Register New Professor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json._id) {",
+									"    pm.collectionVariables.set('professor_id', json._id);",
+									"    console.log('Professor ID saved: ' + json._id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Dr. Anil Mehta\",\n    \"email\": \"anil.mehta@sms.edu\",\n    \"phone\": \"987-654-3210\",\n    \"password\": \"prof123\"\n}"
+						},
+						"url": {
+							"raw": "{{professor_url}}/api/professors",
+							"host": ["{{professor_url}}"],
+							"path": ["api", "professors"]
+						}
+					}
+				},
+				{
+					"name": "Get All Professors",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{professor_url}}/api/professors",
+							"host": ["{{professor_url}}"],
+							"path": ["api", "professors"]
+						}
+					}
+				},
+				{
+					"name": "Get Professor by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{professor_url}}/api/professors/{{professor_id}}",
+							"host": ["{{professor_url}}"],
+							"path": ["api", "professors", "{{professor_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Professor",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Dr. Anil Mehta\",\n    \"email\": \"anil.mehta@sms.edu\",\n    \"phone\": \"987-654-0000\"\n}"
+						},
+						"url": {
+							"raw": "{{professor_url}}/api/professors/{{professor_id}}",
+							"host": ["{{professor_url}}"],
+							"path": ["api", "professors", "{{professor_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Professor",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{professor_url}}/api/professors/{{professor_id}}",
+							"host": ["{{professor_url}}"],
+							"path": ["api", "professors", "{{professor_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Course Service",
+			"item": [
+				{
+					"name": "Create New Course",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json._id) {",
+									"    pm.collectionVariables.set('course_id', json._id);",
+									"    console.log('Course ID saved: ' + json._id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Data Structures and Algorithms\",\n    \"code\": \"DSA401\",\n    \"description\": \"Advanced study of data structures including trees, graphs, heaps, and algorithm complexity analysis.\",\n    \"schedule\": {\n        \"days\": [\"Tuesday\", \"Thursday\"],\n        \"time\": \"2:00 PM - 4:00 PM\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{course_url}}/api/courses",
+							"host": ["{{course_url}}"],
+							"path": ["api", "courses"]
+						}
+					}
+				},
+				{
+					"name": "Get All Courses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{course_url}}/api/courses",
+							"host": ["{{course_url}}"],
+							"path": ["api", "courses"]
+						}
+					}
+				},
+				{
+					"name": "Get Course by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{course_url}}/api/courses/{{course_id}}",
+							"host": ["{{course_url}}"],
+							"path": ["api", "courses", "{{course_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Course",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Data Structures and Algorithms\",\n    \"code\": \"DSA401\",\n    \"description\": \"Updated: covers advanced graph algorithms and dynamic programming in depth.\",\n    \"schedule\": {\n        \"days\": [\"Monday\", \"Wednesday\", \"Friday\"],\n        \"time\": \"11:00 AM - 12:30 PM\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{course_url}}/api/courses/{{course_id}}",
+							"host": ["{{course_url}}"],
+							"path": ["api", "courses", "{{course_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Course",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{course_url}}/api/courses/{{course_id}}",
+							"host": ["{{course_url}}"],
+							"path": ["api", "courses", "{{course_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Enrollment Service",
+			"item": [
+				{
+					"name": "Enroll Student in Course",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json._id) {",
+									"    pm.collectionVariables.set('enrollment_id', json._id);",
+									"    console.log('Enrollment ID saved: ' + json._id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"student\": \"{{student_id}}\",\n    \"course\": \"{{course_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{enrollment_url}}/api/enrollments",
+							"host": ["{{enrollment_url}}"],
+							"path": ["api", "enrollments"]
+						}
+					}
+				},
+				{
+					"name": "Get All Enrollments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{enrollment_url}}/api/enrollments",
+							"host": ["{{enrollment_url}}"],
+							"path": ["api", "enrollments"]
+						}
+					}
+				},
+				{
+					"name": "Get Enrollments by Student ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{enrollment_url}}/api/enrollments/student/{{student_id}}",
+							"host": ["{{enrollment_url}}"],
+							"path": ["api", "enrollments", "student", "{{student_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Enrollments by Course ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{enrollment_url}}/api/enrollments/course/{{course_id}}",
+							"host": ["{{enrollment_url}}"],
+							"path": ["api", "enrollments", "course", "{{course_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Lookup Enrollment by Student + Course",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{enrollment_url}}/api/enrollments/lookup?student={{student_id}}&course={{course_id}}",
+							"host": ["{{enrollment_url}}"],
+							"path": ["api", "enrollments", "lookup"],
+							"query": [
+								{
+									"key": "student",
+									"value": "{{student_id}}"
+								},
+								{
+									"key": "course",
+									"value": "{{course_id}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Enrollment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{enrollment_url}}/api/enrollments/{{enrollment_id}}",
+							"host": ["{{enrollment_url}}"],
+							"path": ["api", "enrollments", "{{enrollment_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Enrollment Service JWKS",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{enrollment_url}}/.well-known/jwks.json",
+							"host": ["{{enrollment_url}}"],
+							"path": [".well-known", "jwks.json"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Grade Service",
+			"item": [
+				{
+					"name": "Assign Grade",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json._id) {",
+									"    pm.collectionVariables.set('grade_id', json._id);",
+									"    console.log('Grade ID saved: ' + json._id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"student\": \"{{student_id}}\",\n    \"course\": \"{{course_id}}\",\n    \"enrollment\": \"{{enrollment_id}}\",\n    \"grade\": \"A\",\n    \"score\": 88,\n    \"remarks\": \"Demonstrates strong understanding of data structures and algorithm design.\"\n}"
+						},
+						"url": {
+							"raw": "{{grade_url}}/api/grades",
+							"host": ["{{grade_url}}"],
+							"path": ["api", "grades"]
+						}
+					}
+				},
+				{
+					"name": "Get All Grades",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{grade_url}}/api/grades",
+							"host": ["{{grade_url}}"],
+							"path": ["api", "grades"]
+						}
+					}
+				},
+				{
+					"name": "Get Grade by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{grade_url}}/api/grades/{{grade_id}}",
+							"host": ["{{grade_url}}"],
+							"path": ["api", "grades", "{{grade_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Grades by Student ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{grade_url}}/api/grades/student/{{student_id}}",
+							"host": ["{{grade_url}}"],
+							"path": ["api", "grades", "student", "{{student_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Grades by Course ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{grade_url}}/api/grades/course/{{course_id}}",
+							"host": ["{{grade_url}}"],
+							"path": ["api", "grades", "course", "{{course_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Grade",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{professor_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"grade\": \"A+\",\n    \"score\": 96,\n    \"remarks\": \"Outstanding improvement in final project and exam performance.\"\n}"
+						},
+						"url": {
+							"raw": "{{grade_url}}/api/grades/{{grade_id}}",
+							"host": ["{{grade_url}}"],
+							"path": ["api", "grades", "{{grade_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Grade",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{grade_url}}/api/grades/{{grade_id}}",
+							"host": ["{{grade_url}}"],
+							"path": ["api", "grades", "{{grade_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Grade Service JWKS",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{grade_url}}/.well-known/jwks.json",
+							"host": ["{{grade_url}}"],
+							"path": [".well-known", "jwks.json"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

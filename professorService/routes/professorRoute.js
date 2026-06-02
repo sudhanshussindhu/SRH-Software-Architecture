@@ -16,7 +16,7 @@ router.get("/internal", async (req, res) => {
   try {
     const token = authHeader.split(" ")[1];
     const payload = await verifyJWTWithJWKS(token);
-    if (payload.role !== ROLES.AUTH_SERVICE) {
+    if (!payload.roles.includes(ROLES.AUTH_SERVICE)) {
       return res.status(403).json({ error: "Forbidden" });
     }
     const professors = await Professor.find().sort({ createdAt: -1 });
@@ -28,11 +28,9 @@ router.get("/internal", async (req, res) => {
 // GET /api/professors
 // Returns all professors (sorted newest first).
 // Restricted to admins and students — students need to see who teaches them.
-router.get("/", verifyRole([ROLES.ADMIN, ROLES.STUDENT]), async (_req, res) => {
+router.get("/", verifyRole([ROLES.ADMIN, ROLES.AUTH_SERVICE]), async (_req, res) => {
   try {
-    const professors = await Professor.find()
-      .select("-password")
-      .sort({ createdAt: -1 });
+    const professors = await Professor.find();
     return res.status(200).json(professors);
   } catch (error) {
     return res.status(500).json({ error: error.message });
