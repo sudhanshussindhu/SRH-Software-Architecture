@@ -2,7 +2,9 @@ const express = require("express");
 const Professor = require("../models/professor");
 const bcrypt = require("bcrypt");
 const { verifyRole, restrictProfessorToOwnData, verifyJWTWithJWKS } = require("./auth/util");
-const { ROLES } = require("../../consts");
+const { ROLES, EVENTS } = require("../../consts");
+const { publish } = require("../../eventBus");
+const { parsePagination, paginatedResponse } = require("../../pagination");
 const router = express.Router();
 
 // GET /api/professors/internal
@@ -28,10 +30,19 @@ router.get("/internal", async (req, res) => {
 // GET /api/professors
 // Returns all professors (sorted newest first).
 // Restricted to admins and students — students need to see who teaches them.
-router.get("/", verifyRole([ROLES.ADMIN, ROLES.AUTH_SERVICE]), async (_req, res) => {
+router.get("/", verifyRole([ROLES.ADMIN, ROLES.AUTH_SERVICE]), async (req, res) => {
   try {
-    const professors = await Professor.find();
-    return res.status(200).json(professors);
+    const pagination = parsePagination(req.query);
+    if (!pagination) {
+      const professors = await Professor.find();
+      return res.status(200).json(professors);
+    }
+    const { page, limit, skip } = pagination;
+    const [professors, total] = await Promise.all([
+      Professor.find().skip(skip).limit(limit),
+      Professor.countDocuments(),
+    ]);
+    return res.status(200).json(paginatedResponse(professors, total, { page, limit }));
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -67,6 +78,7 @@ router.post("/", async (req, res) => {
       password,
     });
 
+    await publish(EVENTS.PROFESSOR_CREATED, { id: professor._id, name: professor.name, email: professor.email });
     return res.status(201).json({
       id: professor._id,
       name: professor.name,
@@ -133,6 +145,7 @@ router.put(
       if (!professor) {
         return res.status(404).json({ error: "Professor not found" });
       }
+      await publish(EVENTS.PROFESSOR_UPDATED, { id: professor._id });
       return res.status(200).json(professor);
     } catch (error) {
       if (error.code === 11000) {
@@ -143,7 +156,7 @@ router.put(
   }
 );
 
-// DELETE /api/professors/:id
+// DELETE /api/v1/professors/:id
 // Permanently deletes a professor record. Restricted to admins only.
 router.delete("/:id", verifyRole([ROLES.ADMIN]), async (req, res) => {
   try {
@@ -151,6 +164,7 @@ router.delete("/:id", verifyRole([ROLES.ADMIN]), async (req, res) => {
     if (!professor) {
       return res.status(404).json({ error: "Professor not found" });
     }
+    await publish(EVENTS.PROFESSOR_DELETED, { id: professor._id });
     return res.status(200).json({ message: "Professor deleted successfully" });
   } catch (error) {
     return res.status(500).json({ error: error.message });

@@ -2,7 +2,9 @@ const express = require("express");
 const Course = require("../models/course");
 const router = express.Router();
 const { verifyRole } = require("./auth/util");
-const { ROLES } = require("../../consts");
+const { ROLES, EVENTS } = require("../../consts");
+const { publish } = require("../../eventBus");
+const { parsePagination, paginatedResponse } = require("../../pagination");
 
 // Create a new course
 router.post(
@@ -13,6 +15,7 @@ router.post(
       req.body.createdBy = req.user.id;
       const course = new Course(req.body);
       await course.save();
+      await publish(EVENTS.COURSE_CREATED, { id: course._id, createdBy: course.createdBy });
       res.status(201).json(course);
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -26,8 +29,17 @@ router.get(
   verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.ENROLLMENT_SERVICE]),
   async (req, res) => {
     try {
-      const courses = await Course.find();
-      res.status(200).json(courses);
+      const pagination = parsePagination(req.query);
+      if (!pagination) {
+        const courses = await Course.find();
+        return res.status(200).json(courses);
+      }
+      const { page, limit, skip } = pagination;
+      const [courses, total] = await Promise.all([
+        Course.find().skip(skip).limit(limit),
+        Course.countDocuments(),
+      ]);
+      return res.status(200).json(paginatedResponse(courses, total, { page, limit }));
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -85,6 +97,7 @@ router.put(
           runValidators: true,
         }
       );
+      await publish(EVENTS.COURSE_UPDATED, { id: updatedCourse._id });
       res.status(200).json(updatedCourse);
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -116,6 +129,7 @@ router.delete(
       }
 
       await Course.findByIdAndDelete(courseId);
+      await publish(EVENTS.COURSE_DELETED, { id: courseId });
       res.status(200).json({ message: "Course deleted successfully", course });
     } catch (error) {
       console.error(error);

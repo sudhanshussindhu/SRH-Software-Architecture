@@ -9,7 +9,10 @@ const {
   fetchCourseById,
   fetchEnrollmentByStudentAndCourse,
 } = require("./auth/util");
-const { ROLES } = require("../../consts");
+const { ROLES, EVENTS } = require("../../consts");
+const { publish } = require("../../eventBus");
+const { parsePagination, paginatedResponse } = require("../../pagination");
+const enrollmentCache = require("../enrollmentCache");
 const { gradeServiceLogger: logger } = require("../../logging");
 
 // Assign a grade to a student for a course (Admin and Professor only)
@@ -63,16 +66,21 @@ router.post(
         });
       }
 
-      // Verify enrollment exists
-      let enrollmentData;
-      try {
-        logger.info("Verifying student is enrolled in the course.");
-        enrollmentData = await fetchEnrollmentByStudentAndCourse(student, course);
-      } catch (err) {
-        logger.warn("Student is not enrolled in this course.");
-        return res
-          .status(404)
-          .json({ message: "Student is not enrolled in this course" });
+      // Verify enrollment: check event-driven cache first, fall back to HTTP on miss
+      let enrollmentId = enrollmentCache.getEnrollmentId(student, course);
+      if (enrollmentId) {
+        logger.info("Enrollment verified from cache.");
+      } else {
+        logger.info("Enrollment cache miss — falling back to HTTP lookup.");
+        try {
+          const enrollmentData = await fetchEnrollmentByStudentAndCourse(student, course);
+          enrollmentId = enrollmentData._id.toString();
+        } catch (err) {
+          logger.warn("Student is not enrolled in this course.");
+          return res
+            .status(404)
+            .json({ message: "Student is not enrolled in this course" });
+        }
       }
 
       // Check if grade already exists for this student+course
@@ -87,7 +95,7 @@ router.post(
       const newGrade = new Grade({
         student,
         course,
-        enrollment: enrollmentData._id,
+        enrollment: enrollmentId,
         grade,
         score,
         remarks,
@@ -95,6 +103,7 @@ router.post(
       });
 
       const savedGrade = await newGrade.save();
+      await publish(EVENTS.GRADE_ASSIGNED, { id: savedGrade._id, student, course, grade });
       logger.info("Grade assigned successfully.");
       return res.status(201).json(savedGrade);
     } catch (error) {
@@ -113,9 +122,19 @@ router.get(
   async (req, res) => {
     logger.info("Received request to fetch all grades.");
     try {
-      const grades = await Grade.find();
+      const pagination = parsePagination(req.query);
+      if (!pagination) {
+        const grades = await Grade.find();
+        logger.info("Successfully fetched all grades.");
+        return res.status(200).json(grades);
+      }
+      const { page, limit, skip } = pagination;
+      const [grades, total] = await Promise.all([
+        Grade.find().skip(skip).limit(limit),
+        Grade.countDocuments(),
+      ]);
       logger.info("Successfully fetched all grades.");
-      return res.status(200).json(grades);
+      return res.status(200).json(paginatedResponse(grades, total, { page, limit }));
     } catch (error) {
       logger.error("Failed to fetch grades. " + error.message);
       return res.status(500).json({
@@ -236,6 +255,7 @@ router.put(
       gradeDoc.gradedAt = new Date();
 
       const updatedGrade = await gradeDoc.save();
+      await publish(EVENTS.GRADE_UPDATED, { id: gradeDoc._id, student: gradeDoc.student, course: gradeDoc.course });
       logger.info("Grade updated successfully.");
       return res
         .status(200)

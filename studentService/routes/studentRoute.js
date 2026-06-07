@@ -2,7 +2,10 @@ const express = require("express");
 
 const Student = require("../models/student");
 const { verifyRole, restrictStudentToOwnData, verifyJWTWithJWKS } = require("./auth/util");
-const { ROLES } = require("../../consts");
+const { ROLES, EVENTS } = require("../../consts");
+const { publish } = require("../../eventBus");
+const { parsePagination, paginatedResponse } = require("../../pagination");
+const { studentServiceLogger: logger } = require("../../logging");
 
 const router = express.Router();
 
@@ -28,10 +31,19 @@ router.get("/internal", async (req, res) => {
 });
 
 // Only admins, professors, enrollment service, and auth service can list all students
-router.get("/", verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.ENROLLMENT_SERVICE, ROLES.AUTH_SERVICE]), async (_req, res) => {
+router.get("/", verifyRole([ROLES.ADMIN, ROLES.PROFESSOR, ROLES.ENROLLMENT_SERVICE, ROLES.AUTH_SERVICE]), async (req, res) => {
     try {
-        const students = await Student.find();
-        return res.status(200).json(students);
+        const pagination = parsePagination(req.query);
+        if (!pagination) {
+            const students = await Student.find();
+            return res.status(200).json(students);
+        }
+        const { page, limit, skip } = pagination;
+        const [students, total] = await Promise.all([
+            Student.find().skip(skip).limit(limit),
+            Student.countDocuments(),
+        ]);
+        return res.status(200).json(paginatedResponse(students, total, { page, limit }));
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
@@ -61,6 +73,7 @@ router.post("/", async (req, res) => {
             password,
         });
 
+        await publish(EVENTS.STUDENT_CREATED, { id: student._id, name: student.name, email: student.email });
         return res.status(201).json({
             id: student._id,
             name: student.name,
@@ -125,6 +138,7 @@ router.put(
             if (!student) {
                 return res.status(404).json({ error: "Student not found" });
             }
+            await publish(EVENTS.STUDENT_UPDATED, { id: student._id });
             return res.status(200).json(student);
         } catch (error) {
             if (error.code === 11000) {
@@ -135,7 +149,7 @@ router.put(
     }
 );
 
-// DELETE /api/students/:id
+// DELETE /api/v1/students/:id
 // Permanently deletes a student record. Restricted to admins only.
 router.delete("/:id", verifyRole([ROLES.ADMIN]), async (req, res) => {
     try {
@@ -143,6 +157,7 @@ router.delete("/:id", verifyRole([ROLES.ADMIN]), async (req, res) => {
         if (!student) {
             return res.status(404).json({ error: "Student not found" });
         }
+        await publish(EVENTS.STUDENT_DELETED, { id: student._id });
         return res.status(200).json({ message: "Student deleted successfully" });
     } catch (error) {
         return res.status(500).json({ error: error.message });

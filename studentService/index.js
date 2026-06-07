@@ -37,7 +37,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use("/api/students", studentRoutes);
+app.use("/api/v1/students", studentRoutes);
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -45,8 +45,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error" });
 });
 
+const { connect } = require("../eventBus");
+
 const PORT = process.env.PORT || 5003;
 
 app.listen(PORT, () => {
   studentServiceLogger.info(`Student Service is running on port ${PORT}`);
+  connect(studentServiceLogger);
 });

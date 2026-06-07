@@ -31,7 +31,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/.well-known/jwks.json", publicKeyRoute);
-app.use("/api/enrollments", enrollmentRoutes);
+app.use("/api/v1/enrollments", enrollmentRoutes);
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -39,8 +39,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error" });
 });
 
+const { connect } = require("../eventBus");
+
 // Start server
 const PORT = process.env.PORT || 5005;
 app.listen(PORT, () => {
   enrollementServiceLogger.info(`Enrollment running on port ${PORT}`);
+  connect(enrollementServiceLogger);
 });

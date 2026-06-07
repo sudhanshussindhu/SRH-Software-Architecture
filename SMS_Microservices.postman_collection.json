@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "c3f91a2e-7d84-4b58-a1e0-9b2c5d3e8f46",
 		"name": "Student Management System API",
-		"description": "API collection for the SMS microservices — Auth, Student, Professor, Course, Enrollment, and Grade services.",
+		"description": "API collection for the SMS microservices \u2014 Auth, Student, Professor, Course, Enrollment, and Grade services.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -111,9 +111,16 @@
 							"raw": "{\n    \"email\": \"riya.kapoor@sms.edu\",\n    \"password\": \"stu123\"\n}"
 						},
 						"url": {
-							"raw": "{{auth_url}}/api/login/student",
-							"host": ["{{auth_url}}"],
-							"path": ["api", "login", "student"]
+							"raw": "{{auth_url}}/api/v1/login/student",
+							"host": [
+								"{{auth_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login",
+								"student"
+							]
 						}
 					}
 				},
@@ -147,9 +154,16 @@
 							"raw": "{\n    \"email\": \"anil.mehta@sms.edu\",\n    \"password\": \"prof123\"\n}"
 						},
 						"url": {
-							"raw": "{{auth_url}}/api/login/professor",
-							"host": ["{{auth_url}}"],
-							"path": ["api", "login", "professor"]
+							"raw": "{{auth_url}}/api/v1/login/professor",
+							"host": [
+								"{{auth_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login",
+								"professor"
+							]
 						}
 					}
 				},
@@ -183,9 +197,16 @@
 							"raw": "{\n    \"email\": \"admin@gmail.com\",\n    \"password\": \"admin123\"\n}"
 						},
 						"url": {
-							"raw": "{{auth_url}}/api/login/admin",
-							"host": ["{{auth_url}}"],
-							"path": ["api", "login", "admin"]
+							"raw": "{{auth_url}}/api/v1/login/admin",
+							"host": [
+								"{{auth_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login",
+								"admin"
+							]
 						}
 					}
 				},
@@ -196,8 +217,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{auth_url}}/.well-known/jwks.json",
-							"host": ["{{auth_url}}"],
-							"path": [".well-known", "jwks.json"]
+							"host": [
+								"{{auth_url}}"
+							],
+							"path": [
+								".well-known",
+								"jwks.json"
+							]
 						}
 					}
 				}
@@ -236,9 +262,15 @@
 							"raw": "{\n    \"name\": \"Riya Kapoor\",\n    \"email\": \"riya.kapoor@sms.edu\",\n    \"password\": \"stu123\"\n}"
 						},
 						"url": {
-							"raw": "{{student_url}}/api/students",
-							"host": ["{{student_url}}"],
-							"path": ["api", "students"]
+							"raw": "{{student_url}}/api/v1/students",
+							"host": [
+								"{{student_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"students"
+							]
 						}
 					}
 				},
@@ -253,9 +285,15 @@
 							}
 						],
 						"url": {
-							"raw": "{{student_url}}/api/students",
-							"host": ["{{student_url}}"],
-							"path": ["api", "students"]
+							"raw": "{{student_url}}/api/v1/students",
+							"host": [
+								"{{student_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"students"
+							]
 						}
 					}
 				},
@@ -270,9 +308,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{student_url}}/api/students/{{student_id}}",
-							"host": ["{{student_url}}"],
-							"path": ["api", "students", "{{student_id}}"]
+							"raw": "{{student_url}}/api/v1/students/{{student_id}}",
+							"host": [
+								"{{student_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"students",
+								"{{student_id}}"
+							]
 						}
 					}
 				},
@@ -295,9 +340,16 @@
 							"raw": "{\n    \"name\": \"Riya Kapoor\",\n    \"email\": \"riya.kapoor.updated@sms.edu\"\n}"
 						},
 						"url": {
-							"raw": "{{student_url}}/api/students/{{student_id}}",
-							"host": ["{{student_url}}"],
-							"path": ["api", "students", "{{student_id}}"]
+							"raw": "{{student_url}}/api/v1/students/{{student_id}}",
+							"host": [
+								"{{student_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"students",
+								"{{student_id}}"
+							]
 						}
 					}
 				},
@@ -312,9 +364,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{student_url}}/api/students/{{student_id}}",
-							"host": ["{{student_url}}"],
-							"path": ["api", "students", "{{student_id}}"]
+							"raw": "{{student_url}}/api/v1/students/{{student_id}}",
+							"host": [
+								"{{student_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"students",
+								"{{student_id}}"
+							]
 						}
 					}
 				}
@@ -353,9 +412,15 @@
 							"raw": "{\n    \"name\": \"Dr. Anil Mehta\",\n    \"email\": \"anil.mehta@sms.edu\",\n    \"phone\": \"987-654-3210\",\n    \"password\": \"prof123\"\n}"
 						},
 						"url": {
-							"raw": "{{professor_url}}/api/professors",
-							"host": ["{{professor_url}}"],
-							"path": ["api", "professors"]
+							"raw": "{{professor_url}}/api/v1/professors",
+							"host": [
+								"{{professor_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"professors"
+							]
 						}
 					}
 				},
@@ -370,9 +435,15 @@
 							}
 						],
 						"url": {
-							"raw": "{{professor_url}}/api/professors",
-							"host": ["{{professor_url}}"],
-							"path": ["api", "professors"]
+							"raw": "{{professor_url}}/api/v1/professors",
+							"host": [
+								"{{professor_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"professors"
+							]
 						}
 					}
 				},
@@ -387,9 +458,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{professor_url}}/api/professors/{{professor_id}}",
-							"host": ["{{professor_url}}"],
-							"path": ["api", "professors", "{{professor_id}}"]
+							"raw": "{{professor_url}}/api/v1/professors/{{professor_id}}",
+							"host": [
+								"{{professor_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"professors",
+								"{{professor_id}}"
+							]
 						}
 					}
 				},
@@ -412,9 +490,16 @@
 							"raw": "{\n    \"name\": \"Dr. Anil Mehta\",\n    \"email\": \"anil.mehta@sms.edu\",\n    \"phone\": \"987-654-0000\"\n}"
 						},
 						"url": {
-							"raw": "{{professor_url}}/api/professors/{{professor_id}}",
-							"host": ["{{professor_url}}"],
-							"path": ["api", "professors", "{{professor_id}}"]
+							"raw": "{{professor_url}}/api/v1/professors/{{professor_id}}",
+							"host": [
+								"{{professor_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"professors",
+								"{{professor_id}}"
+							]
 						}
 					}
 				},
@@ -429,9 +514,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{professor_url}}/api/professors/{{professor_id}}",
-							"host": ["{{professor_url}}"],
-							"path": ["api", "professors", "{{professor_id}}"]
+							"raw": "{{professor_url}}/api/v1/professors/{{professor_id}}",
+							"host": [
+								"{{professor_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"professors",
+								"{{professor_id}}"
+							]
 						}
 					}
 				}
@@ -474,9 +566,15 @@
 							"raw": "{\n    \"name\": \"Data Structures and Algorithms\",\n    \"code\": \"DSA401\",\n    \"description\": \"Advanced study of data structures including trees, graphs, heaps, and algorithm complexity analysis.\",\n    \"schedule\": {\n        \"days\": [\"Tuesday\", \"Thursday\"],\n        \"time\": \"2:00 PM - 4:00 PM\"\n    }\n}"
 						},
 						"url": {
-							"raw": "{{course_url}}/api/courses",
-							"host": ["{{course_url}}"],
-							"path": ["api", "courses"]
+							"raw": "{{course_url}}/api/v1/courses",
+							"host": [
+								"{{course_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"courses"
+							]
 						}
 					}
 				},
@@ -491,9 +589,15 @@
 							}
 						],
 						"url": {
-							"raw": "{{course_url}}/api/courses",
-							"host": ["{{course_url}}"],
-							"path": ["api", "courses"]
+							"raw": "{{course_url}}/api/v1/courses",
+							"host": [
+								"{{course_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"courses"
+							]
 						}
 					}
 				},
@@ -508,9 +612,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{course_url}}/api/courses/{{course_id}}",
-							"host": ["{{course_url}}"],
-							"path": ["api", "courses", "{{course_id}}"]
+							"raw": "{{course_url}}/api/v1/courses/{{course_id}}",
+							"host": [
+								"{{course_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"courses",
+								"{{course_id}}"
+							]
 						}
 					}
 				},
@@ -533,9 +644,16 @@
 							"raw": "{\n    \"name\": \"Data Structures and Algorithms\",\n    \"code\": \"DSA401\",\n    \"description\": \"Updated: covers advanced graph algorithms and dynamic programming in depth.\",\n    \"schedule\": {\n        \"days\": [\"Monday\", \"Wednesday\", \"Friday\"],\n        \"time\": \"11:00 AM - 12:30 PM\"\n    }\n}"
 						},
 						"url": {
-							"raw": "{{course_url}}/api/courses/{{course_id}}",
-							"host": ["{{course_url}}"],
-							"path": ["api", "courses", "{{course_id}}"]
+							"raw": "{{course_url}}/api/v1/courses/{{course_id}}",
+							"host": [
+								"{{course_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"courses",
+								"{{course_id}}"
+							]
 						}
 					}
 				},
@@ -550,9 +668,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{course_url}}/api/courses/{{course_id}}",
-							"host": ["{{course_url}}"],
-							"path": ["api", "courses", "{{course_id}}"]
+							"raw": "{{course_url}}/api/v1/courses/{{course_id}}",
+							"host": [
+								"{{course_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"courses",
+								"{{course_id}}"
+							]
 						}
 					}
 				}
@@ -595,9 +720,15 @@
 							"raw": "{\n    \"student\": \"{{student_id}}\",\n    \"course\": \"{{course_id}}\"\n}"
 						},
 						"url": {
-							"raw": "{{enrollment_url}}/api/enrollments",
-							"host": ["{{enrollment_url}}"],
-							"path": ["api", "enrollments"]
+							"raw": "{{enrollment_url}}/api/v1/enrollments",
+							"host": [
+								"{{enrollment_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"enrollments"
+							]
 						}
 					}
 				},
@@ -612,9 +743,15 @@
 							}
 						],
 						"url": {
-							"raw": "{{enrollment_url}}/api/enrollments",
-							"host": ["{{enrollment_url}}"],
-							"path": ["api", "enrollments"]
+							"raw": "{{enrollment_url}}/api/v1/enrollments",
+							"host": [
+								"{{enrollment_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"enrollments"
+							]
 						}
 					}
 				},
@@ -629,9 +766,17 @@
 							}
 						],
 						"url": {
-							"raw": "{{enrollment_url}}/api/enrollments/student/{{student_id}}",
-							"host": ["{{enrollment_url}}"],
-							"path": ["api", "enrollments", "student", "{{student_id}}"]
+							"raw": "{{enrollment_url}}/api/v1/enrollments/student/{{student_id}}",
+							"host": [
+								"{{enrollment_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"enrollments",
+								"student",
+								"{{student_id}}"
+							]
 						}
 					}
 				},
@@ -646,9 +791,17 @@
 							}
 						],
 						"url": {
-							"raw": "{{enrollment_url}}/api/enrollments/course/{{course_id}}",
-							"host": ["{{enrollment_url}}"],
-							"path": ["api", "enrollments", "course", "{{course_id}}"]
+							"raw": "{{enrollment_url}}/api/v1/enrollments/course/{{course_id}}",
+							"host": [
+								"{{enrollment_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"enrollments",
+								"course",
+								"{{course_id}}"
+							]
 						}
 					}
 				},
@@ -663,9 +816,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{enrollment_url}}/api/enrollments/lookup?student={{student_id}}&course={{course_id}}",
-							"host": ["{{enrollment_url}}"],
-							"path": ["api", "enrollments", "lookup"],
+							"raw": "{{enrollment_url}}/api/v1/enrollments/lookup?student={{student_id}}&course={{course_id}}",
+							"host": [
+								"{{enrollment_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"enrollments",
+								"lookup"
+							],
 							"query": [
 								{
 									"key": "student",
@@ -690,9 +850,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{enrollment_url}}/api/enrollments/{{enrollment_id}}",
-							"host": ["{{enrollment_url}}"],
-							"path": ["api", "enrollments", "{{enrollment_id}}"]
+							"raw": "{{enrollment_url}}/api/v1/enrollments/{{enrollment_id}}",
+							"host": [
+								"{{enrollment_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"enrollments",
+								"{{enrollment_id}}"
+							]
 						}
 					}
 				},
@@ -703,8 +870,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{enrollment_url}}/.well-known/jwks.json",
-							"host": ["{{enrollment_url}}"],
-							"path": [".well-known", "jwks.json"]
+							"host": [
+								"{{enrollment_url}}"
+							],
+							"path": [
+								".well-known",
+								"jwks.json"
+							]
 						}
 					}
 				}
@@ -747,9 +919,15 @@
 							"raw": "{\n    \"student\": \"{{student_id}}\",\n    \"course\": \"{{course_id}}\",\n    \"enrollment\": \"{{enrollment_id}}\",\n    \"grade\": \"A\",\n    \"score\": 88,\n    \"remarks\": \"Demonstrates strong understanding of data structures and algorithm design.\"\n}"
 						},
 						"url": {
-							"raw": "{{grade_url}}/api/grades",
-							"host": ["{{grade_url}}"],
-							"path": ["api", "grades"]
+							"raw": "{{grade_url}}/api/v1/grades",
+							"host": [
+								"{{grade_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"grades"
+							]
 						}
 					}
 				},
@@ -764,9 +942,15 @@
 							}
 						],
 						"url": {
-							"raw": "{{grade_url}}/api/grades",
-							"host": ["{{grade_url}}"],
-							"path": ["api", "grades"]
+							"raw": "{{grade_url}}/api/v1/grades",
+							"host": [
+								"{{grade_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"grades"
+							]
 						}
 					}
 				},
@@ -781,9 +965,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{grade_url}}/api/grades/{{grade_id}}",
-							"host": ["{{grade_url}}"],
-							"path": ["api", "grades", "{{grade_id}}"]
+							"raw": "{{grade_url}}/api/v1/grades/{{grade_id}}",
+							"host": [
+								"{{grade_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"grades",
+								"{{grade_id}}"
+							]
 						}
 					}
 				},
@@ -798,9 +989,17 @@
 							}
 						],
 						"url": {
-							"raw": "{{grade_url}}/api/grades/student/{{student_id}}",
-							"host": ["{{grade_url}}"],
-							"path": ["api", "grades", "student", "{{student_id}}"]
+							"raw": "{{grade_url}}/api/v1/grades/student/{{student_id}}",
+							"host": [
+								"{{grade_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"grades",
+								"student",
+								"{{student_id}}"
+							]
 						}
 					}
 				},
@@ -815,9 +1014,17 @@
 							}
 						],
 						"url": {
-							"raw": "{{grade_url}}/api/grades/course/{{course_id}}",
-							"host": ["{{grade_url}}"],
-							"path": ["api", "grades", "course", "{{course_id}}"]
+							"raw": "{{grade_url}}/api/v1/grades/course/{{course_id}}",
+							"host": [
+								"{{grade_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"grades",
+								"course",
+								"{{course_id}}"
+							]
 						}
 					}
 				},
@@ -840,9 +1047,16 @@
 							"raw": "{\n    \"grade\": \"A+\",\n    \"score\": 96,\n    \"remarks\": \"Outstanding improvement in final project and exam performance.\"\n}"
 						},
 						"url": {
-							"raw": "{{grade_url}}/api/grades/{{grade_id}}",
-							"host": ["{{grade_url}}"],
-							"path": ["api", "grades", "{{grade_id}}"]
+							"raw": "{{grade_url}}/api/v1/grades/{{grade_id}}",
+							"host": [
+								"{{grade_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"grades",
+								"{{grade_id}}"
+							]
 						}
 					}
 				},
@@ -857,9 +1071,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{grade_url}}/api/grades/{{grade_id}}",
-							"host": ["{{grade_url}}"],
-							"path": ["api", "grades", "{{grade_id}}"]
+							"raw": "{{grade_url}}/api/v1/grades/{{grade_id}}",
+							"host": [
+								"{{grade_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"grades",
+								"{{grade_id}}"
+							]
 						}
 					}
 				},
@@ -870,8 +1091,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{grade_url}}/.well-known/jwks.json",
-							"host": ["{{grade_url}}"],
-							"path": [".well-known", "jwks.json"]
+							"host": [
+								"{{grade_url}}"
+							],
+							"path": [
+								".well-known",
+								"jwks.json"
+							]
 						}
 					}
 				}

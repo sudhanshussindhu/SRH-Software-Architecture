@@ -11,7 +11,10 @@ const {
   fetchCourses,
   fetchCourseById,
 } = require("./auth/util");
-const { ROLES } = require("../../consts");
+const { ROLES, EVENTS } = require("../../consts");
+const { publish } = require("../../eventBus");
+const { parsePagination, paginatedResponse } = require("../../pagination");
+const { enrollementServiceLogger: logger } = require("../../logging");
 
 // Create a new enrollment
 router.post(
@@ -55,9 +58,14 @@ router.post(
 
       const newEnrollment = new Enrollment({ student, course });
       const savedEnrollment = await newEnrollment.save();
+      await publish(EVENTS.ENROLLMENT_CREATED, {
+        student: savedEnrollment.student.toString(),
+        course: savedEnrollment.course.toString(),
+        enrollmentId: savedEnrollment._id.toString(),
+      });
       return res.status(201).json(savedEnrollment);
     } catch (error) {
-      console.error(error);
+      logger.error(`Failed to create enrollment: ${error.message}`);
       return res.status(500).json({
         message: "Server Error: Unable to create enrollment",
       });
@@ -70,8 +78,17 @@ router.get(
   verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]),
   async (req, res) => {
     try {
-      let enrollments = await Enrollment.find();
-      return res.status(200).json(enrollments);
+      const pagination = parsePagination(req.query);
+      if (!pagination) {
+        const enrollments = await Enrollment.find();
+        return res.status(200).json(enrollments);
+      }
+      const { page, limit, skip } = pagination;
+      const [enrollments, total] = await Promise.all([
+        Enrollment.find().skip(skip).limit(limit),
+        Enrollment.countDocuments(),
+      ]);
+      return res.status(200).json(paginatedResponse(enrollments, total, { page, limit }));
     } catch (error) {
       return res.status(500).json({
         message: "Server Error: Unable to fetch enrollments",
@@ -216,6 +233,11 @@ router.delete(
         return res.status(404).json({ message: "Enrollment not found" });
       }
 
+      await publish(EVENTS.ENROLLMENT_DELETED, {
+        student: enrollment.student.toString(),
+        course: enrollment.course.toString(),
+        enrollmentId: enrollment._id.toString(),
+      });
       res
         .status(200)
         .json({ message: "Enrollment deleted successfully", enrollment });

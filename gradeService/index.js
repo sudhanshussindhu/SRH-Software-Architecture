@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/.well-known/jwks.json", publicKeyRoute);
-app.use("/api/grades", gradeRoutes);
+app.use("/api/v1/grades", gradeRoutes);
 
 app.use((err, req, res, next) => {
   gradeServiceLogger.error(
@@ -35,7 +35,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error" });
 });
 
+const { connect } = require("../eventBus");
+const enrollmentCache = require("./enrollmentCache");
+
 const PORT = process.env.PORT || 5006;
 app.listen(PORT, () => {
   gradeServiceLogger.info(`Grade Server running on port ${PORT}`);
+  // Register enrollment subscriptions before connecting so connect() picks them up
+  enrollmentCache.init();
+  connect(gradeServiceLogger);
 });

@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use("/api/login", loginRoute);
+app.use("/api/v1/login", loginRoute);
 
 // Error handler (logs with correlation id)
 app.use((err, req, res, next) => {
@@ -49,8 +49,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error" });
 });
 
+const { connect } = require("../eventBus");
+
 // Start server
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   authServiceLogger.info(`Auth Server running on port ${PORT}`);
+  connect(authServiceLogger);
 });
