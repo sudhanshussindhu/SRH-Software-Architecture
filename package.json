@@ -16,7 +16,8 @@
     "start:courseService": "npm --prefix ./courseService run dev-course-service",
     "start:enrollmentService": "npm --prefix ./enrollmentService run dev-enrollment-service",
     "start:gradeService": "npm --prefix ./gradeService run dev-grade-service",
-    "start:all": "concurrently --kill-others-on-fail -n authService,professorService,studentService,courseService,enrollmentService,gradeService -c green,blue,magenta,cyan,yellow,red \"npm run start:authService\" \"npm run start:professorService\" \"npm run start:studentService\" \"npm run start:courseService\" \"npm run start:enrollmentService\" \"npm run start:gradeService\""
+    "start:apiGateway": "npm --prefix ./apiGateway run dev-api-gateway",
+    "start:all": "concurrently --kill-others-on-fail -n authService,professorService,studentService,courseService,enrollmentService,gradeService,apiGateway -c green,blue,magenta,cyan,yellow,red,white \"npm run start:authService\" \"npm run start:professorService\" \"npm run start:studentService\" \"npm run start:courseService\" \"npm run start:enrollmentService\" \"npm run start:gradeService\" \"npm run start:apiGateway\""
   },
   "author": "Gunjan Kadu",
   "license": "ISC",

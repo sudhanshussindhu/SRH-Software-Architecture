@@ -63,6 +63,7 @@ let enrollementServiceLogger = createDynamicLogger("enrollmentService");
 let courseServiceLogger = createDynamicLogger("courseService");
 let professorServiceLogger = createDynamicLogger("professorService");
 let gradeServiceLogger = createDynamicLogger("gradeService");
+let gatewayLogger = createDynamicLogger("apiGateway");
 module.exports = {
   authServiceLogger,
   studentServiceLogger,
@@ -70,4 +71,5 @@ module.exports = {
   courseServiceLogger,
   professorServiceLogger,
   gradeServiceLogger,
+  gatewayLogger,
 };

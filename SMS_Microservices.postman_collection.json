@@ -8,32 +8,32 @@
 	"variable": [
 		{
 			"key": "auth_url",
-			"value": "http://localhost:5001",
+			"value": "http://localhost:5050",
 			"type": "string"
 		},
 		{
 			"key": "student_url",
-			"value": "http://localhost:5003",
+			"value": "http://localhost:5050",
 			"type": "string"
 		},
 		{
 			"key": "professor_url",
-			"value": "http://localhost:5002",
+			"value": "http://localhost:5050",
 			"type": "string"
 		},
 		{
 			"key": "course_url",
-			"value": "http://localhost:5004",
+			"value": "http://localhost:5050",
 			"type": "string"
 		},
 		{
 			"key": "enrollment_url",
-			"value": "http://localhost:5005",
+			"value": "http://localhost:5050",
 			"type": "string"
 		},
 		{
 			"key": "grade_url",
-			"value": "http://localhost:5006",
+			"value": "http://localhost:5050",
 			"type": "string"
 		},
 		{
@@ -216,14 +216,16 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{auth_url}}/.well-known/jwks.json",
+							"raw": "http://localhost:5001/.well-known/jwks.json",
 							"host": [
-								"{{auth_url}}"
+								"localhost"
 							],
 							"path": [
 								".well-known",
 								"jwks.json"
-							]
+							],
+							"protocol": "http",
+							"port": "5001"
 						}
 					}
 				}
@@ -869,14 +871,16 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{enrollment_url}}/.well-known/jwks.json",
+							"raw": "http://localhost:5005/.well-known/jwks.json",
 							"host": [
-								"{{enrollment_url}}"
+								"localhost"
 							],
 							"path": [
 								".well-known",
 								"jwks.json"
-							]
+							],
+							"protocol": "http",
+							"port": "5005"
 						}
 					}
 				}
@@ -1090,14 +1094,16 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{grade_url}}/.well-known/jwks.json",
+							"raw": "http://localhost:5006/.well-known/jwks.json",
 							"host": [
-								"{{grade_url}}"
+								"localhost"
 							],
 							"path": [
 								".well-known",
 								"jwks.json"
-							]
+							],
+							"protocol": "http",
+							"port": "5006"
 						}
 					}
 				}

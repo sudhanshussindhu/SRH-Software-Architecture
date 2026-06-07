@@ -1,0 +1,24 @@
+{
+  "name": "apigateway",
+  "version": "1.0.0",
+  "description": "API Gateway for Student Management System — single entry point that routes external traffic to backend microservices",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "scripts": {
+    "start-api-gateway": "node index.js",
+    "dev-api-gateway": "nodemon index.js"
+  },
+  "author": "Gunjan Kadu",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.5.2",
+    "http-proxy-middleware": "^3.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
